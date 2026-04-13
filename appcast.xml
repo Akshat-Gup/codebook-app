@@ -4,30 +4,12 @@
         <title>Codebook</title>
         <item>
             <title>0.1.2</title>
-            <pubDate>Mon, 13 Apr 2026 11:51:57 +0800</pubDate>
-            <sparkle:version>92</sparkle:version>
+            <pubDate>Mon, 13 Apr 2026 04:02:24 +0000</pubDate>
+            <sparkle:version>50</sparkle:version>
             <sparkle:shortVersionString>0.1.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.2/Codebook-0.1.2-macos.zip" length="5239407" type="application/octet-stream" sparkle:edSignature="bpUN/niu9RvoeyUNBGMiQb+i0BHEkeMdol2JpJEAcobMhY/sq9Uh8kERdB8VrFczfkJux3Fp6/y6fQJoxG8WDg=="/>
-        </item>
-        <item>
-            <title>0.1.1</title>
-            <pubDate>Thu, 09 Apr 2026 00:54:15 +0800</pubDate>
-            <sparkle:version>91</sparkle:version>
-            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.1/Codebook-0.1.1-macos.zip" length="5238941" type="application/octet-stream" sparkle:edSignature="jca4flZ6PpivYXZ7XwLpEcH0bOfpUHp0Ibk3n3Zc6AqqpTe960zDY0DF+BbFNVp9YLClsYJKQnotZ43wcwuLCQ=="/>
-        </item>
-        <item>
-            <title>0.1.0</title>
-            <pubDate>Mon, 06 Apr 2026 00:08:54 +0800</pubDate>
-            <sparkle:version>87</sparkle:version>
-            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.0/Codebook-0.1.0-macos.zip" length="5212541" type="application/octet-stream" sparkle:edSignature="NHgI7cDjTTPLhQkYvgElS7Rd0uDsEoTPxZo5iwsnZHxyIWtqfeE0sA9z8qXvRixBTAWiaGor+XnGqeV0jip/Dg=="/>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.2/Codebook-0.1.2-macos.zip" length="4604871" type="application/octet-stream" sparkle:edSignature="gSbD/FDuxqib2dgNMo6tpGUdkYI+Pa0nwmVOIkhnYZ3SPKlmHP4r3HRFOHedY+LkCFnNHi3BmAoCC9SW2RUjBw=="/>
         </item>
     </channel>
 </rss>
