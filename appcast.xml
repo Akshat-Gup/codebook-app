@@ -6,10 +6,10 @@
             <title>0.1.6</title>
             <pubDate>Sat, 18 Apr 2026 16:41:56 +0800</pubDate>
             <sparkle:version>101</sparkle:version>
-            <sparkle:shortVersionString>0.1.7</sparkle:shortVersionString>
+            <sparkle:shortVersionString>0.1.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.7/Codebook-0.1.7-macos.zip" length="5314948" type="application/octet-stream" sparkle:edSignature="/5AFblzNLXNW17OVBPT3E72UnTby/IuOPArSUdRBid+stHcsZsxsXtigote7j6yOr3x2p3PqR0vSlspaZEIECg=="/>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.8/Codebook-0.1.8-macos.zip" length="5243774" type="application/octet-stream" sparkle:edSignature="l8dOwEBHdsvNA37Py1CwMlZG+BU3qKAvIe6qqZ2p0uFunhgsZ9xozMTMm09OArMILFFpIbL3NvuIPf+IeMEwAg=="/>
         </item>
         <item>
             <title>0.1.5</title>
