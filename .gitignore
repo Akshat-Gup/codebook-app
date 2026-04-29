@@ -1,0 +1,8 @@
+.build/
+.DS_Store
+.swiftpm/
+Package.resolved
+dist/
+logs/
+.env.local
+Config/certs/
