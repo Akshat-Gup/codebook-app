@@ -10,19 +10,6 @@ Codebook is open source under the [GNU Affero General Public License v3.0](LICEN
 
 SPDX-License-Identifier: `AGPL-3.0-only`
 
-## Media
-
-Add screen recordings and screenshots here as the public release gets polished:
-
-https://github.com/user-attachments/assets/codebook-overview-placeholder
-
-| View | Placeholder |
-|---|---|
-| Overview recording | `docs/media/codebook-overview.mp4` |
-| History browser | `docs/media/history-browser.png` |
-| Insights dashboard | `docs/media/insights-dashboard.png` |
-| Search and detail | `docs/media/search-and-detail.png` |
-
 ## What Codebook Does
 
 Codebook turns local prompt history into a browsable workspace:
@@ -48,7 +35,6 @@ AI coding work creates useful context that is easy to lose: prompts, generated p
 - Prompt detail, copy, export, and sharing workflows.
 - Insights views for activity, cost, timing, models, and provider usage.
 - Diagram generation and storage for prompt-linked architecture notes.
-- Sparkle-based update support for packaged builds.
 
 ## Platform
 
@@ -59,16 +45,6 @@ Codebook is macOS only.
 - Xcode command line tools
 
 Codebook is not built, tested, or supported for Windows or Linux.
-
-## Install
-
-Download packaged builds from the public releases page when releases are available:
-
-```text
-https://github.com/Akshat-Gup/codebook-app/releases
-```
-
-Unsigned builds may require the normal macOS Gatekeeper bypass flow. Signed and notarized builds are preferred for broader distribution.
 
 ## Build From Source
 
@@ -87,7 +63,7 @@ For a packaged `.app` bundle:
 open dist/Codebook.app
 ```
 
-## Run Tests
+## Verification
 
 The public source mirror currently ships the app target only. Use `swift build` as the mirror verification command:
 
@@ -138,22 +114,6 @@ flowchart TB
     I --> K
 ```
 
-### Release And Updates
-
-```mermaid
-flowchart LR
-    A["Tag vX.Y.Z"] --> B["GitHub Actions"]
-    B --> C["Build macOS app"]
-    C --> D["Sign and notarize when credentials exist"]
-    D --> E["Zip release artifact"]
-    E --> F["GitHub Release"]
-    E --> G["Sparkle appcast.xml"]
-    G --> H["GitHub Pages"]
-    I["Installed Codebook app"] --> H
-    H --> J["Update metadata"]
-    J --> I
-```
-
 ## Privacy
 
 Codebook is local-first. It reads local repos and supported tool history from your machine, normalizes that information into local app state, and renders it in the desktop UI.
@@ -182,9 +142,4 @@ Before opening a pull request:
 
 - Keep changes focused and consistent with the surrounding SwiftUI and service patterns.
 - Avoid committing local prompt archives, private logs, signing assets, or generated release artifacts.
-- Run the smallest verification command that proves the change, usually `swift test`.
-- Include screenshots or screen recordings for meaningful UI changes.
-
-## Status
-
-Codebook is early macOS software. The public source mirror is intended to make the app inspectable, forkable, and buildable while the product surface continues to evolve.
+- Run `swift build` before submitting app-source changes.
