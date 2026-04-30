@@ -5,6 +5,8 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.controlActiveState) var controlActiveState
+    @AppStorage("codebook.hasCompletedOnboarding") var hasCompletedOnboarding = false
+    @AppStorage("codebook.hasRecordedOnboardingDecision") var hasRecordedOnboardingDecision = false
     @State var copiedPromptID: String?
     @State var dashboardChartStyle: DashboardChartStyle = .heatmap
     @State var barChartRange: BarChartRange = .month
@@ -237,6 +239,27 @@ struct ContentView: View {
                 .environmentObject(model)
                 .presentationSizing(.fitted)
         }
+        .sheet(isPresented: Binding(
+            get: { !hasCompletedOnboarding },
+            set: { isPresented in
+                if !isPresented {
+                    hasCompletedOnboarding = true
+                }
+            }
+        )) {
+            OnboardingView(
+                startSetup: {
+                    hasCompletedOnboarding = true
+                    DispatchQueue.main.async {
+                        model.settingsPresented = true
+                    }
+                },
+                finish: {
+                    hasCompletedOnboarding = true
+                }
+            )
+            .frame(width: 860, height: 560)
+        }
         .alert("Error", isPresented: Binding(get: {
             model.errorMessage != nil
         }, set: { value in
@@ -257,10 +280,29 @@ struct ContentView: View {
             }
         }
         .onAppear {
+            markExistingUsersOnboardedIfNeeded()
             rebuildDashboardDerivedData()
         }
         .onChange(of: model.importedPromptsRevision) { _, _ in
             rebuildDashboardDerivedData()
+        }
+    }
+
+    func markExistingUsersOnboardedIfNeeded() {
+        guard !hasRecordedOnboardingDecision else { return }
+        hasRecordedOnboardingDecision = true
+
+        let hasExistingAppState =
+            !model.importedPrompts.isEmpty ||
+            !model.manualFolders.isEmpty ||
+            !model.pinnedProjectIDs.isEmpty ||
+            !model.savedPromptIDs.isEmpty ||
+            !model.savedPromptKeys.isEmpty ||
+            !model.customProviderProfiles.isEmpty ||
+            !model.savedDiagrams.isEmpty
+
+        if hasExistingAppState {
+            hasCompletedOnboarding = true
         }
     }
 }
