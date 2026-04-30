@@ -6,6 +6,8 @@
 
 Codebook is a local-first macOS app for collecting, browsing, searching, and sharing prompt history across local repos and supported AI coding tools.
 
+[Download the latest macOS release](https://github.com/Akshat-Gup/codebook-app/releases/latest)
+
 Codebook is open source under the [GNU Affero General Public License v3.0](LICENSE).
 
 SPDX-License-Identifier: `AGPL-3.0-only`
