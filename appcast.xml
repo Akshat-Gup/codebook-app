@@ -4,12 +4,30 @@
         <title>Codebook</title>
         <item>
             <title>0.1.10</title>
-            <pubDate>Thu, 30 Apr 2026 08:52:00 +0000</pubDate>
-            <sparkle:version>56</sparkle:version>
+            <pubDate>Thu, 30 Apr 2026 16:49:04 +0800</pubDate>
+            <sparkle:version>102</sparkle:version>
             <sparkle:shortVersionString>0.1.10</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.10/Codebook-0.1.10-macos.zip" length="4738421" type="application/octet-stream" sparkle:edSignature="Z6a1NBKuYqMQ+54ZSPwMYYsN1gUcAP5z1cXAYZQARTcQvqxOrvkNBCD6oeJJncU4HUyaEQMsKC9jdkWwy5ZvAw=="/>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.10/Codebook-0.1.10-macos.zip" length="5334654" type="application/octet-stream" sparkle:edSignature="B48gvLrzQjr7TQxzeqaLc3OCovNQ6p/cAoEjId8uRZ4LylT/h/kI9VwgsB+RtJa17Hdu9t01dEGxsR8FLbUxAg=="/>
+        </item>
+        <item>
+            <title>0.1.6</title>
+            <pubDate>Sat, 18 Apr 2026 16:41:56 +0800</pubDate>
+            <sparkle:version>101</sparkle:version>
+            <sparkle:shortVersionString>0.1.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.8/Codebook-0.1.8-macos.zip" length="5243774" type="application/octet-stream" sparkle:edSignature="l8dOwEBHdsvNA37Py1CwMlZG+BU3qKAvIe6qqZ2p0uFunhgsZ9xozMTMm09OArMILFFpIbL3NvuIPf+IeMEwAg=="/>
+        </item>
+        <item>
+            <title>0.1.5</title>
+            <pubDate>Sat, 18 Apr 2026 16:02:47 +0800</pubDate>
+            <sparkle:version>100</sparkle:version>
+            <sparkle:shortVersionString>0.1.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.5/Codebook-0.1.5-macos.zip" length="5302732" type="application/octet-stream" sparkle:edSignature="HAGQuXMUN+jqAMENQ/yzKwTDXrWoc/VjboipQyBJuTewvEKPVrz1ixdEgdgfXJ4wTNTEg9KABRM9HIzqYH1+CA=="/>
         </item>
     </channel>
 </rss>
