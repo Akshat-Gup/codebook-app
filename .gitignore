@@ -5,4 +5,3 @@ Package.resolved
 dist/
 logs/
 .env.local
-Config/certs/

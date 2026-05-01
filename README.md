@@ -10,6 +10,8 @@ Codebook is a local-first macOS app for collecting, browsing, searching, and sha
 
 Codebook is open source under the [GNU Affero General Public License v3.0](LICENSE).
 
+Copyright (C) 2026 Akshat Gupta.
+
 SPDX-License-Identifier: `AGPL-3.0-only`
 
 ## What Codebook Does
@@ -56,13 +58,6 @@ Clone the repo and build the Swift package:
 git clone https://github.com/Akshat-Gup/codebook-app.git
 cd codebook-app
 swift build
-```
-
-For a packaged `.app` bundle:
-
-```bash
-./scripts/package_codebook_app.sh
-open dist/Codebook.app
 ```
 
 ## Verification
@@ -123,6 +118,8 @@ Codebook is local-first. It reads local repos and supported tool history from yo
 Codebook does not require a hosted account. If you enable features that call an external model or service, review the related provider settings and source code before using those features with sensitive repositories or prompt histories.
 
 ## License
+
+Copyright (C) 2026 Akshat Gupta.
 
 Codebook is licensed under the [GNU Affero General Public License v3.0](LICENSE), SPDX identifier `AGPL-3.0-only`.
 
