@@ -221,7 +221,7 @@ extension AppModel {
                     ["role": "user", "content": userMessage]
                 ],
                 "temperature": 0.3,
-                "max_tokens": 8192
+                "max_completion_tokens": 8192
             ]
 
         case .anthropicMessages:
