@@ -8,6 +8,8 @@ Codebook is a local-first macOS app for collecting, browsing, searching, and sha
 
 [Download the latest macOS release](https://github.com/Akshat-Gup/codebook-app/releases/latest)
 
+[Website](https://trycodebook.com/)
+
 Codebook is open source under the [GNU Affero General Public License v3.0](LICENSE).
 
 Copyright (C) 2026 Akshat Gupta.
