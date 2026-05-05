@@ -192,6 +192,13 @@ Codebook is local-first. It reads local repos and supported tool history from yo
 
 Codebook does not require a hosted account. If you enable features that call an external model or service, review the related provider settings and source code before using those features with sensitive repositories or prompt histories.
 
+## Contact
+
+- Email: [akshat@akshatgup.com](mailto:akshat@akshatgup.com)
+- X: [@Akshat_Gup](https://x.com/Akshat_Gup)
+- LinkedIn: [akshat-gup](https://www.linkedin.com/in/akshat-gup/)
+- GitHub: [Akshat-Gup](https://github.com/Akshat-Gup/)
+
 ## License
 
 Copyright (C) 2026 Akshat Gupta.
