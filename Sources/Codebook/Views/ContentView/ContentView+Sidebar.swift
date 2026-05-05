@@ -89,6 +89,17 @@ extension ContentView {
                     }
 
                     sidebarSpecialRow(
+                        title: "Sessions",
+                        systemImage: "moon.zzz",
+                        count: model.importedSessionCount,
+                        isSelected: model.isAutomationsSelected
+                    ) {
+                        withAnimation(CodebookMotion.pane) {
+                            model.selectAutomations()
+                        }
+                    }
+
+                    sidebarSpecialRow(
                         title: "Plugins",
                         systemImage: "puzzlepiece.extension",
                         count: model.ecosystemCatalog.count,

@@ -5,3 +5,6 @@ Package.resolved
 dist/
 logs/
 .env.local
+demo-video/
+app-clips/
+social-assets/

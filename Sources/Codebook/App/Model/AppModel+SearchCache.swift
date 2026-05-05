@@ -348,6 +348,10 @@ extension AppModel {
 
         hiddenVisiblePromptsCache = applyHistoryFilters(to: baseHiddenPromptList)
         hiddenPromptGroupsCache = Self.buildPromptGroups(from: hiddenVisiblePromptsCache, groupingMode: historyGroupingMode)
+        sessionDayGroupsCache = Self.buildSessionDayGroups(
+            from: importedPrompts,
+            canResume: { canOpenThread(for: $0) }
+        )
 
         if let minimumEffectiveDate, let maximumEffectiveDate {
             historyFilterDateBoundsCache = minimumEffectiveDate ... maximumEffectiveDate

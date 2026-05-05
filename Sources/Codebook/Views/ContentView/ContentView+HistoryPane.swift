@@ -323,50 +323,491 @@ extension ContentView {
     }
 
     @ViewBuilder
-    var automationsPane: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center) {
-                Text("Automations")
-                    .font(.title2.weight(.semibold))
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 20)
+    var sessionsPane: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                sessionWatcherControl
 
-            Divider()
-
-            if model.automationProjects.isEmpty {
-                ContentUnavailableView("No repositories available", systemImage: "folder")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                HStack(spacing: 0) {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(model.automationProjects) { project in
-                                automationProjectRow(project)
-                            }
+                if model.sessionDayGroupsCache.isEmpty {
+                    ContentUnavailableView("No sessions", systemImage: "terminal")
+                        .frame(maxWidth: .infinity, minHeight: 320)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(model.sessionDayGroupsCache) { group in
+                            sessionDayDropdown(group)
                         }
-                        .padding(16)
                     }
-                    .frame(width: 290)
-
-                    Divider()
-
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 18) {
-                            if let project = selectedAutomationProject {
-                                automationWorkspace(for: project)
-                            }
-                        }
-                        .padding(24)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
+            .padding(18)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear {
-            synchronizeAutomationSelection()
+            model.refreshHarnessSessionStatus()
+            expandFirstSessionDayIfNeeded()
         }
+        // Refresh harness watcher status while the pane is visible so the live
+        // indicator (active app, keep-awake state) reflects reality without a
+        // tab switch. 5s is well below the watcher's own poll interval.
+        .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in
+            model.refreshHarnessSessionStatus()
+        }
+    }
+
+    var sessionWatcherControl: some View {
+        let status = model.harnessSessionStatus
+        let enabled = status.isInstalled && status.isRunning
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(CodebookMotion.snappy) {
+                    showSessionWatcherOptions.toggle()
+                }
+            } label: {
+                HStack(alignment: .center, spacing: 12) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 12, height: 14)
+                        .rotationEffect(.degrees(showSessionWatcherOptions ? 90 : 0))
+
+                    Image(systemName: "cup.and.saucer.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(enabled ? Color.accentColor : .secondary)
+                        .frame(width: 20, height: 20)
+
+                    Text("Caffeinate")
+                        .font(.system(size: 15, weight: .semibold))
+
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
+                .padding(.bottom, 10)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
+                    Image(systemName: enabled ? "cup.and.saucer.fill" : "cup.and.saucer")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(enabled ? Color.accentColor : .secondary)
+                        .frame(width: 30, height: 30)
+                        .background(AppControlChrome.glassShareButtonBackground(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Keep Mac Awake")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text(sessionWatcherDetailText(status))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Button {
+                        Task {
+                            if enabled {
+                                await model.uninstallHarnessSessionWatcher()
+                            } else {
+                                await model.installHarnessSessionWatcher()
+                            }
+                        }
+                    } label: {
+                        Text(enabled ? "Turn Off" : "Turn On")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(enabled ? AppControlChrome.charcoal : .white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(enabled ? AppControlChrome.softSurface : AppControlChrome.segmentBlue)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(model.isReadOnlyMode)
+                }
+
+                if showSessionWatcherOptions {
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("When")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            LazyVGrid(columns: sessionPickerColumns(count: HarnessSessionMode.allCases.count), spacing: 10) {
+                                ForEach(HarnessSessionMode.allCases, id: \.self) { mode in
+                                    sessionModeButton(mode)
+                                }
+                            }
+                            if model.harnessMode == .custom {
+                                sessionCustomDurationControl
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+
+                        if model.harnessMode == .agentSessions {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Apps")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                LazyVGrid(columns: sessionPickerColumns(count: model.harnessSessionService.defaultProcessNames.count), spacing: 10) {
+                                    ForEach(model.harnessSessionService.defaultProcessNames, id: \.self) { name in
+                                        sessionProcessToggle(name)
+                                    }
+                                }
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Options")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            LazyVGrid(columns: sessionPickerColumns(count: 2), spacing: 10) {
+                                sessionOptionToggle(
+                                    title: "Keep display awake",
+                                    systemImage: "display",
+                                    isOn: model.harnessKeepDisplayAwake
+                                ) {
+                                    model.setHarnessKeepDisplayAwake(!model.harnessKeepDisplayAwake)
+                                }
+                                sessionOptionToggle(
+                                    title: "Only when plugged in",
+                                    systemImage: "powerplug",
+                                    isOn: model.harnessPowerAdapterOnly
+                                ) {
+                                    model.setHarnessPowerAdapterOnly(!model.harnessPowerAdapterOnly)
+                                }
+                            }
+                        }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
+        }
+        .background(sessionPanelBackground)
+        .animation(CodebookMotion.snappy, value: showSessionWatcherOptions)
+    }
+
+    var sessionPanelBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5)
+            )
+            .shadow(color: Color.black.opacity(0.08), radius: 5, y: 2)
+    }
+
+    func sessionPickerColumns(count: Int) -> [GridItem] {
+        Array(repeating: GridItem(.flexible(minimum: 96), spacing: 10, alignment: .leading), count: max(count, 1))
+    }
+
+    static func compactDurationLabel(milliseconds: Int) -> String {
+        if milliseconds < 1_000 {
+            return "\(milliseconds)ms"
+        }
+        let seconds = Double(milliseconds) / 1_000
+        return String(format: "%.1fs", seconds)
+    }
+
+    static func compactDurationLabel(seconds: TimeInterval) -> String {
+        let totalSeconds = max(Int(seconds.rounded()), 0)
+        if totalSeconds < 60 {
+            return "\(totalSeconds)s"
+        }
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        if minutes < 60 {
+            return seconds == 0 ? "\(minutes)m" : "\(minutes)m \(seconds)s"
+        }
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+        return remainingMinutes == 0 ? "\(hours)h" : "\(hours)h \(remainingMinutes)m"
+    }
+
+    func sessionWatcherDetailText(_ status: HarnessSessionStatus) -> String {
+        if model.harnessMode == .agentSessions {
+            if let active = status.activeProcessName {
+                let name = IntegrationProvider(rawValue: active)?.title ?? active
+                return "While \(name) is running"
+            }
+            return "While selected agent apps are running"
+        }
+        if model.harnessMode == .custom {
+            return "For \(Self.compactDurationLabel(seconds: TimeInterval(model.harnessCustomDurationSeconds)))"
+        }
+        return "\(model.harnessMode.title)"
+    }
+
+    func sessionModeButton(_ mode: HarnessSessionMode) -> some View {
+        let selected = model.harnessMode == mode
+        return Button {
+            model.setHarnessMode(mode)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: mode.systemImage)
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 14)
+                Text(mode.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(selected ? Color.white : .secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(selected ? AppControlChrome.segmentBlue : AppControlChrome.softSurface.opacity(0.75))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    var sessionCustomDurationControl: some View {
+        let days = model.harnessCustomDurationSeconds / (24 * 60 * 60)
+        let hours = (model.harnessCustomDurationSeconds % (24 * 60 * 60)) / (60 * 60)
+        let minutes = (model.harnessCustomDurationSeconds % (60 * 60)) / 60
+
+        return HStack(spacing: 10) {
+            sessionDurationStepper(
+                title: "Days",
+                value: days,
+                range: 0...30
+            ) { newDays in
+                setCustomDuration(days: newDays, hours: hours, minutes: minutes)
+            }
+            sessionDurationStepper(
+                title: "Hours",
+                value: hours,
+                range: 0...23
+            ) { newHours in
+                setCustomDuration(days: days, hours: newHours, minutes: minutes)
+            }
+            sessionDurationStepper(
+                title: "Minutes",
+                value: minutes,
+                range: 0...59
+            ) { newMinutes in
+                setCustomDuration(days: days, hours: hours, minutes: newMinutes)
+            }
+        }
+        .padding(10)
+        .background(AppControlChrome.glassShareButtonBackground(cornerRadius: 10))
+    }
+
+    func sessionDurationStepper(
+        title: String,
+        value: Int,
+        range: ClosedRange<Int>,
+        onChange: @escaping (Int) -> Void
+    ) -> some View {
+        Stepper(value: Binding(
+            get: { value },
+            set: { onChange($0) }
+        ), in: range) {
+            HStack(spacing: 8) {
+                Text("\(value)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
+                    .frame(minWidth: 20, alignment: .leading)
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .controlSize(.small)
+        .frame(maxWidth: .infinity)
+    }
+
+    func setCustomDuration(days: Int, hours: Int, minutes: Int) {
+        let seconds = days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60
+        model.setHarnessCustomDurationSeconds(max(seconds, 60))
+    }
+
+    func sessionProcessToggle(_ name: String) -> some View {
+        let isOn = model.enabledHarnessProcessNames.contains(name)
+        return Button {
+            model.setHarnessProcessName(name, enabled: !isOn)
+        } label: {
+            HStack(spacing: 8) {
+                if let provider = IntegrationProvider(rawValue: name) {
+                    PlatformIconView(provider: provider, size: 16)
+                } else {
+                    Image(systemName: "terminal")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 16, height: 16)
+                }
+                Text(IntegrationProvider(rawValue: name)?.title ?? name)
+                    .font(.system(size: 12, weight: .medium))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(AppControlChrome.softSurface.opacity(0.75))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    func sessionOptionToggle(title: String, systemImage: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 16)
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(AppControlChrome.softSurface.opacity(0.75))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    func sessionDayDropdown(_ group: SessionDayGroup) -> some View {
+        let isExpanded = expandedSessionDayIDs.contains(group.id)
+        let totalDuration = group.sessions.reduce(0) { $0 + $1.duration }
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(CodebookMotion.snappy) {
+                    toggleSessionDay(group.id)
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 12, height: 14)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    Text(group.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("\(group.sessions.count) sessions")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(Self.compactDurationLabel(seconds: totalDuration))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                VStack(spacing: 0) {
+                    ForEach(group.sessions) { session in
+                        sessionRow(session)
+                        if session.id != group.sessions.last?.id {
+                            Divider().padding(.leading, 52)
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.985, anchor: .top)))
+            }
+        }
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    func sessionRow(_ session: SessionSummary) -> some View {
+        let latest = session.prompts.last
+        return Button {
+            if let latest, session.canResume {
+                model.openThread(for: latest)
+            } else if let latest {
+                withAnimation(CodebookMotion.standard) {
+                    model.selectProject(ProjectSummary(
+                        id: session.projectID,
+                        name: session.projectName,
+                        path: latest.projectPath,
+                        promptCount: session.prompts.count,
+                        isManual: false
+                    ))
+                    model.selectPrompt(latest)
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                PlatformIconView(provider: session.provider, size: 22)
+                    .frame(width: 28, height: 26, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(session.title)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text(session.provider.title)
+                        Text("·")
+                        Text(session.prompts.count == 1 ? "1 prompt" : "\(session.prompts.count) prompts")
+                        if session.commitCount > 0 {
+                            Text("·")
+                            Text(session.commitCount == 1 ? "1 commit" : "\(session.commitCount) commits")
+                        }
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(session.lastActiveAt.formatted(date: .omitted, time: .shortened))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                    Text(Self.compactDurationLabel(seconds: session.duration))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+
+                Image(systemName: session.canResume ? "arrow.up.right" : "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 16)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+
+    func toggleSessionDay(_ id: String) {
+        if expandedSessionDayIDs.contains(id) {
+            expandedSessionDayIDs.remove(id)
+        } else {
+            expandedSessionDayIDs.insert(id)
+        }
+    }
+
+    func expandFirstSessionDayIfNeeded() {
+        guard expandedSessionDayIDs.isEmpty,
+              let first = model.sessionDayGroupsCache.first
+        else { return }
+        expandedSessionDayIDs.insert(first.id)
     }
 
     @ViewBuilder
@@ -585,6 +1026,10 @@ extension ContentView {
 
     func automationProjectRow(_ project: ProjectSummary) -> some View {
         let isSelected = selectedAutomationProject?.id == project.id
+        let status = model.repoAutomationStatus(for: project)
+        let prompts = prompts(for: project)
+        let latest = prompts.map(\.effectiveDate).max()
+        let providers = Array(Set(prompts.map(\.provider))).sorted { $0.rawValue < $1.rawValue }.prefix(4)
 
         return Button {
             withAnimation(CodebookMotion.standard) {
@@ -592,16 +1037,38 @@ extension ContentView {
                 refreshAutomationProjectStatus()
             }
         } label: {
-            HStack(spacing: 10) {
-                Text(project.name)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: status?.hookInstalled == true ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(status?.hookInstalled == true ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
 
-                Spacer()
+                    Text(project.name)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
 
-                Text("\(project.promptCount)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+
+                    Text("\(project.promptCount)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+
+                HStack(spacing: 6) {
+                    ForEach(Array(providers), id: \.self) { provider in
+                        PlatformIconView(provider: provider, size: 14)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    if let latest {
+                        Text(latest.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 10)
@@ -617,6 +1084,9 @@ extension ContentView {
         let status = automationProjectStatus
         let promptsReady = status?.promptStoreExists == true
         let turnedOn = promptsReady && status?.hookInstalled == true
+        let projectPrompts = prompts(for: project)
+        let sessions = Set(projectPrompts.compactMap { $0.sourceContextID ?? $0.sourcePath }).count
+        let commits = Set(projectPrompts.compactMap(\.commitSHA)).count
 
         return VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
@@ -645,6 +1115,14 @@ extension ContentView {
                         systemImage: "text.bubble"
                     )
                 }
+                automationStatusPill(
+                    label: "\(sessions) Sessions",
+                    systemImage: "terminal"
+                )
+                automationStatusPill(
+                    label: "\(commits) Commits",
+                    systemImage: "arrow.triangle.branch"
+                )
             }
 
             automationTrackedProvidersSection(project: project)
@@ -804,6 +1282,10 @@ extension ContentView {
                     .strokeBorder(Color(nsColor: .separatorColor).opacity(0.12), lineWidth: 1)
             )
         }
+    }
+
+    func prompts(for project: ProjectSummary) -> [ImportedPrompt] {
+        model.importedPrompts.filter { $0.projectKey == project.id }
     }
 
     func automationStatusPill(label: String, systemImage: String) -> some View {
@@ -1427,4 +1909,26 @@ extension ContentView {
         .padding(.top, 10)
         .padding(.bottom, 8)
     }
+}
+
+struct SessionDayGroup: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let date: Date
+    let sessions: [SessionSummary]
+    let lastActiveAt: Date
+}
+
+struct SessionSummary: Identifiable, Hashable {
+    let id: String
+    let projectID: String
+    let projectName: String
+    let provider: IntegrationProvider
+    let title: String
+    let prompts: [ImportedPrompt]
+    let startedAt: Date
+    let lastActiveAt: Date
+    let duration: TimeInterval
+    let commitCount: Int
+    let canResume: Bool
 }

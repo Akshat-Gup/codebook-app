@@ -39,12 +39,12 @@ enum Shell {
             try? FileManager.default.removeItem(at: tempDirectory)
         }
 
-        try process.run()
-
         if let timeout {
-            let deadline = DispatchTime.now() + timeout
             let semaphore = DispatchSemaphore(value: 0)
             process.terminationHandler = { _ in semaphore.signal() }
+            try process.run()
+
+            let deadline = DispatchTime.now() + timeout
             if semaphore.wait(timeout: deadline) == .timedOut {
                 process.terminate()
                 process.waitUntilExit()
@@ -54,6 +54,7 @@ enum Shell {
                 return ShellResult(stdout: partial, status: -1)
             }
         } else {
+            try process.run()
             process.waitUntilExit()
         }
 

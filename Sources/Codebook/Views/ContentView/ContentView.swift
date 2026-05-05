@@ -35,6 +35,8 @@ struct ContentView: View {
     @State var providerHeatmapOffsets: [IntegrationProvider: Int] = [:]
     @State var dashboardDerivedData = DashboardDerivedData.empty
     @State var automationProjectID: String?
+    @State var expandedSessionDayIDs: Set<String> = []
+    @State var showSessionWatcherOptions = false
 
     // MARK: - Project toolbar popover state
     @State var showProjectSkillsPopover = false
@@ -117,6 +119,7 @@ struct ContentView: View {
         if model.isDashboardSelected && model.searchText.isEmpty { return "dashboard" }
         if model.isInsightsSelected { return "insights" }
         if model.isSavedSelected { return "saved" }
+        if model.isAutomationsSelected { return "sessions" }
         if model.isEcosystemSelected { return "ecosystem" }
         if model.isHiddenProjectsSelected { return "hidden" }
         return "history-\(model.searchText.isEmpty ? "browse" : "search")"
@@ -182,6 +185,11 @@ struct ContentView: View {
 
                 detailPane
                     .frame(minWidth: 420, idealWidth: 620, maxWidth: .infinity)
+                    .hSplitPaneLeadingResizeCursorStrip()
+                    .transition(mainPaneTransition)
+            } else if model.isAutomationsSelected {
+                sessionsPane
+                    .frame(minWidth: 860, idealWidth: 1120, maxWidth: .infinity)
                     .hSplitPaneLeadingResizeCursorStrip()
                     .transition(mainPaneTransition)
             } else if model.isEcosystemSelected {

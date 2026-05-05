@@ -58,11 +58,13 @@ struct PromptWorkspaceActionService {
     }
 
     func canOpenThread(for prompt: ImportedPrompt) -> Bool {
-        guard let plan = threadResumePlan(for: prompt),
-              codebookCLIInvocation() != nil
-        else {
+        guard let plan = threadResumePlan(for: prompt) else {
             return false
         }
+        if plan.interactive {
+            return canLaunchThreadPlan(plan, for: prompt.provider)
+        }
+        guard codebookCLIInvocation() != nil else { return false }
         return canLaunchThreadPlan(plan, for: prompt.provider)
     }
 
@@ -70,18 +72,17 @@ struct PromptWorkspaceActionService {
         guard let plan = threadResumePlan(for: prompt) else {
             throw unsupportedOpenThreadError(for: prompt)
         }
-        guard let codebookInvocation = codebookCLIInvocation() else {
-            throw ActionError.missingCodebookCLI
-        }
-
         if plan.interactive {
             guard let providerCommand = providerCommandName(for: prompt.provider),
                   commandExists(named: providerCommand) else {
                 throw ActionError.missingCLI(prompt.provider)
             }
-            let command = terminalResumeCommand(codebookInvocation: codebookInvocation, arguments: plan.arguments)
+            let command = interactiveTerminalResumeCommand(for: prompt)
             try launchInTerminal(command)
         } else {
+            guard let codebookInvocation = codebookCLIInvocation() else {
+                throw ActionError.missingCodebookCLI
+            }
             try launchCodebookCommand(codebookInvocation + plan.arguments)
         }
     }
@@ -276,19 +277,8 @@ struct PromptWorkspaceActionService {
                 arguments.append(contentsOf: ["--project-path", projectPath])
             }
             return ThreadResumePlan(arguments: arguments, interactive: true)
-        case .cursor, .copilot:
-            guard let projectPath else { return nil }
-            var arguments = [
-                "open-thread",
-                "--provider", prompt.provider.rawValue,
-                "--source-path", sourcePath,
-                "--project-path", projectPath
-            ]
-            if let contextID = normalizedContextID(prompt.sourceContextID) {
-                arguments.append(contentsOf: ["--context-id", contextID])
-            }
-            return ThreadResumePlan(arguments: arguments, interactive: false)
-        case .antigravity:
+        case .copilot:
+            guard copilotSessionID(for: prompt) != nil else { return nil }
             var arguments = [
                 "open-thread",
                 "--provider", prompt.provider.rawValue,
@@ -300,7 +290,9 @@ struct PromptWorkspaceActionService {
             if let projectPath {
                 arguments.append(contentsOf: ["--project-path", projectPath])
             }
-            return ThreadResumePlan(arguments: arguments, interactive: false)
+            return ThreadResumePlan(arguments: arguments, interactive: true)
+        case .cursor, .antigravity:
+            return nil
         }
     }
 
@@ -348,6 +340,39 @@ struct PromptWorkspaceActionService {
             return nil
         }
         return String(trimmed.dropFirst(prefix.count).dropLast(suffix.count))
+    }
+
+    private func copilotSessionID(for prompt: ImportedPrompt) -> String? {
+        let candidates = [
+            normalizedContextID(prompt.sourceContextID),
+            normalizedContextID(prompt.sourcePath)
+        ].compactMap(\.self)
+
+        for candidate in candidates {
+            if let id = copilotSessionIDFromPath(candidate) {
+                return id
+            }
+            if isUUIDLike(candidate) {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    private func copilotSessionIDFromPath(_ path: String) -> String? {
+        let url = URL(fileURLWithPath: path)
+        let parts = url.pathComponents
+        guard let index = parts.lastIndex(of: "session-state"),
+              parts.indices.contains(parts.index(after: index))
+        else {
+            return nil
+        }
+        let id = parts[parts.index(after: index)]
+        return isUUIDLike(id) ? id : nil
+    }
+
+    private func isUUIDLike(_ value: String) -> Bool {
+        UUID(uuidString: value) != nil
     }
 
     private func claudeSessionIDFromFilename(_ sourcePath: String) -> String? {
@@ -477,7 +502,9 @@ struct PromptWorkspaceActionService {
             return "claude"
         case .opencode:
             return "opencode"
-        case .cursor, .copilot, .antigravity:
+        case .copilot:
+            return "copilot"
+        case .cursor, .antigravity:
             return nil
         }
     }
@@ -506,8 +533,28 @@ struct PromptWorkspaceActionService {
         FileManager.default.fileExists(atPath: "/Applications/\(appName).app")
     }
 
-    private func terminalResumeCommand(codebookInvocation: [String], arguments: [String]) -> String {
-        (codebookInvocation + arguments).map(shellQuoted).joined(separator: " ")
+    private func interactiveTerminalResumeCommand(for prompt: ImportedPrompt) -> String {
+        let command: [String]
+        switch prompt.provider {
+        case .codex:
+            command = ["codex", "resume", codexSessionID(for: prompt) ?? ""]
+        case .claude:
+            command = ["claude", "--resume", claudeSessionID(for: prompt) ?? ""]
+        case .opencode:
+            command = ["opencode", "--session", openCodeSessionID(for: prompt) ?? ""]
+        case .copilot:
+            command = ["copilot", "--resume=\(copilotSessionID(for: prompt) ?? "")"]
+        case .cursor, .antigravity:
+            command = []
+        }
+
+        let commandPart = command.map(shellQuoted).joined(separator: " ")
+        let projectPath = normalizedContextID(prompt.projectPath) ?? normalizedContextID(prompt.gitRoot)
+        let prefix = "export TERM=xterm-256color"
+        guard let projectPath, FileManager.default.fileExists(atPath: projectPath) else {
+            return "\(prefix); \(commandPart)"
+        }
+        return "\(prefix); cd \(shellQuoted(projectPath)) && \(commandPart)"
     }
 
     private func launchInTerminal(_ command: String) throws {

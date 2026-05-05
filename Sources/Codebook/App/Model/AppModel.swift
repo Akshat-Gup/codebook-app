@@ -65,6 +65,13 @@ final class AppModel: ObservableObject {
     @Published var agentsSharedBase: String
     @Published var selectedAgentsAdvice: Set<AgentsAdvicePack>
     @Published var agentsProjectAudits: [AgentsProjectAudit] = []
+    @Published var harnessSessionStatus: HarnessSessionStatus
+    @Published var enabledHarnessProcessNames: Set<String>
+    @Published var harnessPollIntervalSeconds: Int
+    @Published var harnessMode: HarnessSessionMode
+    @Published var harnessCustomDurationSeconds: Int
+    @Published var harnessKeepDisplayAwake: Bool
+    @Published var harnessPowerAdapterOnly: Bool
     /// Destination tools (Cursor, Codex, …) that receive installs from Ecosystem. Persisted; defaults to all known targets.
     @Published var ecosystemInstallTargetSelection: Set<String> = []
 
@@ -105,6 +112,7 @@ final class AppModel: ObservableObject {
     @Published var hiddenPromptGroupsCache: [PromptGroup] = []
     @Published var hiddenProjectsCache: [ProjectSummary] = []
     @Published var hiddenPromptsCache: [ImportedPrompt] = []
+    @Published var sessionDayGroupsCache: [SessionDayGroup] = []
     @Published var localChangesProjectOptionsCache: [ProjectSummary] = []
     @Published var automationProjectsCache: [ProjectSummary] = []
     @Published var historyFilterDateBoundsCache: ClosedRange<Date>?
@@ -117,6 +125,7 @@ final class AppModel: ObservableObject {
     let ecosystemWorkspaceService = EcosystemWorkspaceService()
     let gitHubEcosystemSearchService = GitHubEcosystemSearchService()
     let agentsTemplateService = AgentsTemplateService()
+    let harnessSessionService = HarnessSessionService()
     let runtimeLogger: RuntimeLogger
     let runtimePolicy: RuntimePolicy
     let defaults: UserDefaults
@@ -137,6 +146,12 @@ final class AppModel: ObservableObject {
     let ecosystemInstallTargetIDsKey = "codebook.ecosystemInstallTargetIDs"
     let agentsSharedBaseKey = "codebook.agentsSharedBase"
     let selectedAgentsAdviceKey = "codebook.selectedAgentsAdvice"
+    let enabledHarnessProcessNamesKey = "codebook.enabledHarnessProcessNames"
+    let harnessPollIntervalSecondsKey = "codebook.harnessPollIntervalSeconds"
+    let harnessModeKey = "codebook.harnessMode"
+    let harnessCustomDurationSecondsKey = "codebook.harnessCustomDurationSeconds"
+    let harnessKeepDisplayAwakeKey = "codebook.harnessKeepDisplayAwake"
+    let harnessPowerAdapterOnlyKey = "codebook.harnessPowerAdapterOnly"
     let cliEnabledKey = "codebook.cliEnabled"
     let dataVersionKey = "codebook.integrationDataVersion"
     var currentDataVersion: Int { 15_000 + IntegrationScanner.cacheVersion }
@@ -149,6 +164,8 @@ final class AppModel: ObservableObject {
     var aiSearchTask: Task<Void, Never>?
     var liveRefreshPollTask: Task<Void, Never>?
     var liveRefreshFullRescanTask: Task<Void, Never>?
+    var harnessStatusRefreshTask: Task<Void, Never>?
+    var harnessReinstallDebounceTask: Task<Void, Never>?
     var appDidBecomeActiveObserver: NSObjectProtocol?
     var appDidResignActiveObserver: NSObjectProtocol?
     var lastRefreshCompletedAt: Date?
@@ -222,6 +239,27 @@ final class AppModel: ObservableObject {
         } else {
             self.selectedAgentsAdvice = []
         }
+        let sessionService = HarnessSessionService()
+        let storedHarnessProcesses = Set(defaults.stringArray(forKey: enabledHarnessProcessNamesKey) ?? [])
+        let enabledSessionProcesses = storedHarnessProcesses.isEmpty ? Set(sessionService.defaultProcessNames) : storedHarnessProcesses
+        self.enabledHarnessProcessNames = enabledSessionProcesses
+        let storedPollInterval = defaults.integer(forKey: harnessPollIntervalSecondsKey)
+        self.harnessPollIntervalSeconds = storedPollInterval > 0 ? storedPollInterval : 5
+        let storedHarnessMode = defaults.string(forKey: harnessModeKey)
+            .flatMap(HarnessSessionMode.init(rawValue:)) ?? .agentSessions
+        self.harnessMode = storedHarnessMode
+        let storedCustomDuration = defaults.integer(forKey: harnessCustomDurationSecondsKey)
+        self.harnessCustomDurationSeconds = storedCustomDuration > 0 ? storedCustomDuration : 3 * 60 * 60
+        self.harnessKeepDisplayAwake = defaults.bool(forKey: harnessKeepDisplayAwakeKey)
+        self.harnessPowerAdapterOnly = defaults.bool(forKey: harnessPowerAdapterOnlyKey)
+        self.harnessSessionStatus = HarnessSessionStatus(
+            isInstalled: false,
+            isRunning: false,
+            isKeepingAwake: false,
+            activeProcessName: nil,
+            watchedProcessNames: Array(enabledSessionProcesses).sorted(),
+            logPath: sessionService.logURL.path
+        )
         self.appVersionDisplay = releaseMetadata.versionDisplay
         self.appReleaseRepository = releaseMetadata.githubRepository
         self.appReleasePageURL = releaseMetadata.releasesURL
@@ -291,6 +329,7 @@ final class AppModel: ObservableObject {
             }
             startLiveRefreshLoops()
         }
+        refreshHarnessSessionStatus()
     }
 
     var projectSummaries: [ProjectSummary] {
