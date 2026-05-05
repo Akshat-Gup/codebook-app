@@ -3,13 +3,13 @@
     <channel>
         <title>Codebook</title>
         <item>
-            <title>0.1.12</title>
-            <pubDate>Tue, 05 May 2026 07:53:15 +0000</pubDate>
-            <sparkle:version>59</sparkle:version>
-            <sparkle:shortVersionString>0.1.12</sparkle:shortVersionString>
+            <title>0.1.13</title>
+            <pubDate>Tue, 05 May 2026 15:49:41 +0800</pubDate>
+            <sparkle:version>109</sparkle:version>
+            <sparkle:shortVersionString>0.1.13</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.12/Codebook-0.1.12-macos.zip" length="4925676" type="application/octet-stream" sparkle:edSignature="UOdGrdk6RfX9Dv5LzPScY3dEsjNLsTisCBzsJ8G3MoknIZyEIaVuYLtNwZx1A+WArUPpUFG4kuQi4w5LOyNPCA=="/>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.13/Codebook-0.1.13-macos.zip" length="5528498" type="application/octet-stream" sparkle:edSignature="JHVSUiTQ0EytXTLCh+Hyeqg6YZK107WzVK/zDMOnFLgVzdOktMQwSw9a2dVIYyWKXHPva1z7Op0T2jiH7D92CQ=="/>
         </item>
     </channel>
 </rss>
