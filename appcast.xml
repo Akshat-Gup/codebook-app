@@ -3,6 +3,15 @@
     <channel>
         <title>Codebook</title>
         <item>
+            <title>0.1.17</title>
+            <pubDate>Mon, 25 May 2026 04:47:45 +0800</pubDate>
+            <sparkle:version>116</sparkle:version>
+            <sparkle:shortVersionString>0.1.17</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.17/Codebook-0.1.17-macos.zip" length="6031935" type="application/octet-stream" sparkle:edSignature="G1KydT//Rz4CI+0KGdkyJ8izgck/spBmK09F30Ye/S1idgnEqLtu9W+DG+fIMOrJ2j9ID3L62APL35yl/YZ4Aw=="/>
+        </item>
+        <item>
             <title>0.1.15</title>
             <pubDate>Sun, 24 May 2026 23:06:51 +0800</pubDate>
             <sparkle:version>114</sparkle:version>
@@ -19,15 +28,6 @@
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.14/Codebook-0.1.14-macos.zip" length="5529462" type="application/octet-stream" sparkle:edSignature="u0EyrIsroPCV5Cc6H5nFrPnY5goZUeK4YOLNCCIeLZxfVPagickNGPaHsTNG3QVkvJAPtvFKzTN3/ZZ/Yl+YBQ=="/>
-        </item>
-        <item>
-            <title>0.1.13</title>
-            <pubDate>Tue, 05 May 2026 15:49:41 +0800</pubDate>
-            <sparkle:version>109</sparkle:version>
-            <sparkle:shortVersionString>0.1.13</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://github.com/Akshat-Gup/codebook-app/releases/download/v0.1.13/Codebook-0.1.13-macos.zip" length="5528498" type="application/octet-stream" sparkle:edSignature="JHVSUiTQ0EytXTLCh+Hyeqg6YZK107WzVK/zDMOnFLgVzdOktMQwSw9a2dVIYyWKXHPva1z7Op0T2jiH7D92CQ=="/>
         </item>
     </channel>
 </rss>
