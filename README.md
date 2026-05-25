@@ -41,13 +41,13 @@ Codebook turns local prompt history into a browsable workspace:
 
 Codebook groups prompts around the code they produced. Review prompts by commit when you want PR context, or by thread when you want the original agent conversation. Sharing and saving the relevant prompt set is one click.
 
-<video src="docs/media/readme/codebook-2.0-demo.mp4" controls muted playsinline width="100%" title="Codebook 2.0 groups prompts by commit and thread"></video>
+![Codebook 2.0 groups prompts by commit and thread](docs/media/readme/codebook-2.0-demo.gif)
 
 ### Review PRs With Prompt Context
 
 Codebook detects your local pull requests and maps them back to the prompts, commits, branches, and agent threads that shaped the work, so reviewers can inspect the context behind the diff.
 
-<video src="docs/media/readme/codebook-2.0-pr.mp4" controls muted playsinline width="100%" title="Reviewing PRs with prompt context in Codebook 2.0"></video>
+![Reviewing PRs with prompt context in Codebook 2.0](docs/media/readme/codebook-2.0-pr.gif)
 
 ### Search Your Prompt History
 
